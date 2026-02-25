@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>زمان‌بانک | تبادل مهارت بدون پول</title>
+    
+    <!-- فونت فارسی وزیرمتن -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    
+    <!-- کتابخانه Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- تنظیمات سفارشی -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdfa', 100: '#ccfbf1', 200: '#99f6e4', 300: '#5eead4',
+                            400: '#2dd4bf', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e',
+                            800: '#115e59', 900: '#134e4a',
+                        }
+                    },
+                    fontFamily: { sans: ['Vazirmatn', 'Tahoma', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #14b8a6; border-radius: 10px; }
+        
+        /* انیمیشن‌ها */
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .slide-up { animation: slideUp 0.5s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- =========================================
+         مودال‌ها (پنجره‌های پاپ‌آپ)
+    ========================================== -->
+    
+    <!-- مودال ورود -->
+    <div id="loginModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative fade-in">
+            <button onclick="closeModal('loginModal')" class="absolute top-4 left-4 text-slate-400 hover:text-slate-800 text-2xl">&times;</button>
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 text-center">ورود به زمان‌بانک</h2>
+            <form onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">ایمیل</label>
+                    <input type="email" id="loginEmail" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" placeholder="example@mail.com">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">رمز عبور</label>
+                    <input type="password" id="loginPass" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" placeholder="حداقل ۶ کاراکتر">
+                </div>
+                <button type="submit" class="w-full py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-200">
+                    ورود
+                </button>
+            </form>
+            <p class="text-center mt-4 text-sm text-slate-500">
+                حساب نداری؟ <button onclick="switchModal('loginModal', 'signupModal')" class="text-primary-600 font-bold hover:underline">عضو شو</button>
+            </p>
+        </div>
+    </div>
+
+    <!-- مودال ثبت نام -->
+    <div id="signupModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative fade-in max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('signupModal')" class="absolute top-4 left-4 text-slate-400 hover:text-slate-800 text-2xl">&times;</button>
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 text-center">عضویت در زمان‌بانک</h2>
+            <form onsubmit="handleSignup(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">نام و نام خانوادگی</label>
+                    <input type="text" id="signupName" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" placeholder="علی محمدی">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">ایمیل</label>
+                    <input type="email" id="signupEmail" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">مهارتی که بلدی</label>
+                    <input type="text" id="signupSkillHave" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" placeholder="مثلاً: تدریس ریاضی">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">مهارتی که می‌خواهی یاد بگیری</label>
+                    <input type="text" id="signupSkillWant" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" placeholder="مثلاً: زبان انگلیسی">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">رمز عبور</label>
+                    <input type="password" id="signupPass" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none">
+                </div>
+                <button type="submit" class="w-full py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors">
+                    ایجاد حساب کاربری
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- مودال پیام موفقیت -->
+    <div id="successModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center fade-in">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">✅</div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2" id="successTitle">عملیات موفق!</h3>
+            <p class="text-slate-500 mb-6" id="successMsg">درخواست شما با موفقیت ارسال شد.</p>
+            <button onclick="closeModal('successModal')" class="px-8 py-2 bg-primary-600 text-white rounded-lg font-bold">بسیار خب</button>
+        </div>
+    </div>
+
+    <!-- =========================================
+         هدر
+    ========================================== -->
+    <header id="header" class="fixed top-0 w-full z-40 bg-white/90 backdrop-blur-lg border-b border-slate-100 transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- لوگو -->
+                <a href="#" class="flex items-center gap-2">
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg shadow-primary-200 text-white font-bold text-xl">ز</div>
+                    <span class="font-extrabold text-xl text-slate-800">زمان‌بانک</span>
+                </a>
+
+                <!-- منوی دسکتاپ -->
+                <nav class="hidden md:flex items-center gap-8">
+                    <a href="#exchange" class="text-slate-600 hover:text-primary-600 transition-colors font-medium">تبادل مهارت</a>
+                    <a href="#how" class="text-slate-600 hover:text-primary-600 transition-colors font-medium">نحوه کار</a>
+                </nav>
+
+                <!-- بخش کاربری -->
+                <div id="authArea" class="hidden md:flex items-center gap-3">
+                    <!-- دکمه‌های ورود/عضویت (پیش‌فرض) -->
+                    <div id="guestBtns" class="flex items-center gap-3">
+                        <button onclick="openModal('loginModal')" class="px-4 py-2 text-primary-600 font-semibold hover:bg-primary-50 rounded-lg transition-colors">ورود</button>
+                        <button onclick="openModal('signupModal')" class="px-5 py-2 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-all shadow-md shadow-primary-200">شروع رایگان</button>
+                    </div>
+                    <!-- پروفایل کاربر (بعد از ورود) -->
+                    <div id="userProfile" class="hidden items-center gap-3 cursor-pointer relative group">
+                        <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 font-bold" id="userAvatar">U</div>
+                        <span class="font-medium text-slate-700" id="userNameDisplay">کاربر</span>
+                        <div class="absolute top-full left-0 mt-2 w-48 bg-white border shadow-lg rounded-xl p-2 hidden group-hover:block">
+                            <a href="#" class="block px-4 py-2 hover:bg-slate-50 rounded-lg text-slate-600">داشبورد</a>
+                            <button onclick="handleLogout()" class="w-full text-right px-4 py-2 hover:bg-red-50 rounded-lg text-red-600 font-medium">خروج</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- منوی موبایل -->
+                <button id="menuBtn" class="md:hidden p-2 text-slate-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                </button>
+            </div>
+        </div>
+        <!-- منوی موبایل باز -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white border-t px-4 py-6 space-y-4 shadow-lg">
+            <a href="#exchange" class="block py-2 text-lg font-medium text-slate-700">تبادل مهارت</a>
+            <div class="pt-4 border-t flex flex-col gap-3" id="mobileAuth">
+               <!-- دکمه‌های موبایل اینجا توسط JS مدیریت می‌شوند -->
+            </div>
+        </div>
+    </header>
+
+    <!-- =========================================
+         محتوای اصلی
+    ========================================== -->
+    
+    <!-- هیرو -->
+    <section id="hero" class="pt-32 pb-16 px-4 bg-gradient-to-b from-white to-slate-50 text-center">
+        <div class="max-w-4xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 border border-primary-100 rounded-full text-primary-700 text-sm font-medium mb-6">
+                <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span></span>
+                اولین بانک زمان هوشمند در ایران
+            </div>
+            <h1 class="text-4xl md:text-6xl font-black text-slate-900 leading-tight mb-6">
+                پول نداری؟ مهم نیست.
+                <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-cyan-400">مهارت داری، پس ثروتمندی.</span>
+            </h1>
+            <p class="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto mb-10">
+                در "زمان‌بانک"، ساعت‌های تخصص شما تبدیل به اعتبار می‌شود. بدون واسطه و بدون پول، دانش خود را با جامعه به اشتراک بگذارید.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button onclick="openModal('signupModal')" class="px-8 py-4 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors shadow-2xl flex items-center justify-center gap-2">
+                    همین الان شروع کن
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rotate-180" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- موتور جستجو -->
+    <section id="exchange" class="py-20 bg-white">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">مهارتت را ثبت کن</h2>
+            <p class="text-slate-500 mb-10 text-lg">سیستم هوشمند ما هماهنگ‌ترین افراد را پیدا می‌کند.</p>
+
+            <div class="bg-slate-50 p-8 rounded-3xl border border-slate-200 shadow-inner">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="text-right">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">من این مهارت را دارم:</label>
+                        <input type="text" id="searchHave" placeholder="مثلاً: فتوشاپ" class="w-full px-5 py-4 rounded-xl border-2 border-slate-200 focus:border-primary-500 focus:outline-none bg-white">
+                    </div>
+                    <div class="text-right">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">می‌خواهم این را یاد بگیرم:</label>
+                        <input type="text" id="searchWant" placeholder="مثلاً: زبان انگلیسی" class="w-full px-5 py-4 rounded-xl border-2 border-slate-200 focus:border-primary-500 focus:outline-none bg-white">
+                    </div>
+                </div>
+                <button onclick="performSearch()" class="mt-8 w-full md:w-auto px-12 py-4 bg-gradient-to-r from-primary-600 to-cyan-500 text-white font-bold text-lg rounded-xl hover:shadow-xl transition-all transform hover:-translate-y-1">
+                    جستجوی هم‌مسیر
+                </button>
+            </div>
+
+            <!-- محل نمایش نتایج جستجو -->
+            <div id="searchResults" class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 text-right hidden">
+                <!-- کارت‌های نتیجه اینجا ساخته می‌شوند -->
+            </div>
+        </div>
+    </section>
+
+    <!-- نحوه کار -->
+    <section id="how" class="py-20 bg-slate-50">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center text-slate-800 mb-16">فقط در ۳ قدم ساده</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-2xl border hover:shadow-lg transition-all text-center">
+                    <div class="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl">📝</div>
+                    <span class="inline-block px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full mb-4">مرحله ۱</span>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">ثبت مهارت</h3>
+                    <p class="text-slate-500 text-sm">تخصص و زمان آزاد خود را وارد کنید.</p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl border hover:shadow-lg transition-all text-center">
+                    <div class="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl">🔄</div>
+                    <span class="inline-block px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full mb-4">مرحله ۲</span>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">جستجو</h3>
+                    <p class="text-slate-500 text-sm">فرد هماهنگ برای تبایل پیدا کنید.</p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl border hover:shadow-lg transition-all text-center">
+                    <div class="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl">🚀</div>
+                    <span class="inline-block px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full mb-4">مرحله ۳</span>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">تبادل</h3>
+                    <p class="text-slate-500 text-sm">یاد بده و یاد بگیر!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- فوتر -->
+    <footer class="bg-slate-900 text-slate-400 py-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <div class="flex items-center justify-center gap-2 mb-4">
+                <div class="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center text-white font-bold">ز</div>
+                <span class="font-extrabold text-xl text-white">زمان‌بانک</span>
+            </div>
+            <p class="text-sm">تمامی حقوق محفوظ است &copy; ۱۴۰۳</p>
+        </div>
+    </footer>
+
+    <!-- =========================================
+         اسکریپت‌های جاوااسکریپت (منطق سایت)
+    ========================================== -->
+    <script>
+        // --- ۱. پایگاه داده ساختگی (Mock Database) ---
+        // این دیتا شبیه‌سازی دیتابیس بک‌اند است
+        let mockDatabase = [
+            { id: 1, name: "علی رضایی", email: "ali@test.com", pass: "123456", skillHave: "فتوشاپ", skillWant: "زبان انگلیسی", avatar: "https://i.pravatar.cc/150?img=11" },
+            { id: 2, name: "سارا احمدی", email: "sara@test.com", pass: "123456", skillHave: "زبان انگلیسی", skillWant: "برنامه‌نویسی", avatar: "https://i.pravatar.cc/150?img=5" },
+            { id: 3, name: "محمد کریمی", email: "mohammad@test.com", pass: "123456", skillHave: "گیتار", skillWant: "فتوشاپ", avatar: "https://i.pravatar.cc/150?img=12" },
+            { id: 4, name: "زهرا نوری", email: "zahra@test.com", pass: "123456", skillHave: "برنامه‌نویسی پایتون", skillWant: "آشپزی", avatar: "https://i.pravatar.cc/150?img=9" },
+            { id: 5, name: "رضا محمدی", email: "reza@test.com", pass: "123456", skillHave: "تعمیرات کامپیوتر", skillWant: "زبان ترکی", avatar: "https://i.pravatar.cc/150?img=14" }
+        ];
+
+        let currentUser = null; // کاربر فعلی لاگین شده
+
+        // --- ۲. مدیریت حالت ورود (Auth State) ---
+        window.onload = function() {
+            // چک کردن اینکه آیا کاربر قبلاً لاگین کرده یا خیر (از مرورگر)
+            const savedUser = localStorage.getItem('timeBankUser');
+            if(savedUser) {
+                currentUser = JSON.parse(savedUser);
+                updateUIForLoggedInUser();
+            }
+            updateMobileMenu();
+        };
+
+        function updateUIForLoggedInUser() {
+            document.getElementById('guestBtns').classList.add('hidden');
+            document.getElementById('userProfile').classList.remove('hidden');
+            document.getElementById('userProfile').classList.add('flex');
+            document.getElementById('userNameDisplay').innerText = currentUser.name;
+            document.getElementById('userAvatar').innerText = currentUser.name.charAt(0);
+        }
+
+        function updateUIForGuest() {
+            document.getElementById('guestBtns').classList.remove('hidden');
+            document.getElementById('userProfile').classList.add('hidden');
+            document.getElementById('userProfile').classList.remove('flex');
+        }
+
+        function updateMobileMenu() {
+            const mobileAuth = document.getElementById('mobileAuth');
+            if(currentUser) {
+                mobileAuth.innerHTML = `
+                    <div class="text-center font-bold text-slate-700 mb-2">سلام ${currentUser.name}</div>
+                    <button onclick="handleLogout()" class="w-full py-3 bg-red-50 text-red-600 font-bold rounded-lg">خروج از حساب</button>
+                `;
+            } else {
+                mobileAuth.innerHTML = `
+                    <button onclick="openModal('loginModal')" class="w-full py-3 text-primary-600 font-bold border border-primary-600 rounded-lg">ورود</button>
+                    <button onclick="openModal('signupModal')" class="w-full py-3 bg-primary-600 text-white font-bold rounded-lg">عضویت رایگان</button>
+                `;
+            }
+        }
+
+        // --- ۳. توابع مودال (باز و بسته کردن) ---
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // جلوگیری از اسکرول بدنه
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function switchModal(closeId, openId) {
+            closeModal(closeId);
+            setTimeout(() => openModal(openId), 100);
+        }
+
+        // --- ۴. توابع احراز هویت (ثبت نام و ورود) ---
+        function handleSignup(e) {
+            e.preventDefault();
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const pass = document.getElementById('signupPass').value;
+            const skillHave = document.getElementById('signupSkillHave').value;
+            const skillWant = document.getElementById('signupSkillWant').value;
+
+            // چک کردن تکراری نبودن ایمیل
+            if(mockDatabase.find(u => u.email === email)) {
+                alert("این ایمیل قبلاً ثبت شده است. لطفاً وارد شوید.");
+                return;
+            }
+
+            // ساخت کاربر جدید
+            const newUser = {
+                id: mockDatabase.length + 1,
+                name, email, pass, skillHave, skillWant,
+                avatar: `https://i.pravatar.cc/150?img=${mockDatabase.length + 20}`
+            };
+
+            mockDatabase.push(newUser); // افزودن به دیتابیس ساختگی
+            currentUser = newUser; // تنظیم به عنوان کاربر فعلی
+            localStorage.setItem('timeBankUser', JSON.stringify(currentUser)); // ذخیره در مرورگر
+
+            closeModal('signupModal');
+            updateUIForLoggedInUser();
+            updateMobileMenu();
+            
+            document.getElementById('successTitle').innerText = "ثبت نام موفق!";
+            document.getElementById('successMsg').innerText = `خوش آمدید ${name}. شما با موفقیت ثبت نام کردید.`;
+            openModal('successModal');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+
+            const user = mockDatabase.find(u => u.email === email && u.pass === pass);
+
+            if(user) {
+                currentUser = user;
+                localStorage.setItem('timeBankUser', JSON.stringify(currentUser));
+                closeModal('loginModal');
+                updateUIForLoggedInUser();
+                updateMobileMenu();
+            } else {
+                alert("ایمیل یا رمز عبور اشتباه است.");
+            }
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem('timeBankUser');
+            updateUIForGuest();
+            updateMobileMenu();
+            alert("با موفقیت خارج شدید.");
+        }
+
+        // --- ۵. جستجو و نمایش نتایج ---
+        function performSearch() {
+            const haveText = document.getElementById('searchHave').value.trim();
+            const wantText = document.getElementById('searchWant').value.trim();
+
+            if(!haveText || !wantText) {
+                alert("لطفاً هر دو فیلد مهارت را پر کنید.");
+                return;
+            }
+
+            // منطق جستجو: پیدا کردن کسی که آنچه من می‌خواهم را دارد و آنچه من دارم را می‌خواهد
+            // یا حداقل کسی که آنچه من می‌خواهم را دارد.
+            
+            const results = mockDatabase.filter(user => {
+                // جستجوی هوشمند: تطابق جزئی کلمات
+                const hasWhatIWant = user.skillHave.includes(wantText) || wantText.includes(user.skillHave);
+                return hasWhatIWant && user.id !== (currentUser ? currentUser.id : -1);
+            });
+
+            displayResults(results);
+        }
+
+        function displayResults(users) {
+            const container = document.getElementById('searchResults');
+            container.innerHTML = ''; // پاک کردن نتایج قبلی
+            container.classList.remove('hidden');
+
+            if(users.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-2 bg-yellow-50 border border-yellow-200 rounded-xl p-8 text-center">
+                        <p class="text-yellow-800 font-bold">متأسفانه فرد مناسبی پیدا نشد.</p>
+                        <p class="text-yellow-600 text-sm mt-2">می‌توانید درخواست خود را ثبت کنید تا در صورت یافتن فرد مناسب به شما خبر دهیم.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            users.forEach(user => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl transition-all slide-up';
+                card.innerHTML = `
+                    <div class="flex items-center gap-4 mb-4">
+                        <img src="${user.avatar}" class="w-16 h-16 rounded-full object-cover border-2 border-primary-200" alt="${user.name}">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-lg">${user.name}</h3>
+                            <div class="flex gap-2 mt-1">
+                                <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">🎓 ${user.skillHave}</span>
+                                <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">🔍 ${user.skillWant}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mt-4 border-t pt-4">
+                        <span class="text-slate-500 text-sm">تطابق مهارت: ۹۵٪</span>
+                        <button onclick="sendRequest('${user.name}')" class="px-6 py-2 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-colors text-sm">ارسال درخواست</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function sendRequest(name) {
+            if(!currentUser) {
+                alert("برای ارسال درخواست باید وارد حساب کاربری خود شوید.");
+                openModal('loginModal');
+                return;
+            }
+            document.getElementById('successTitle').innerText = "درخواست ارسال شد!";
+            document.getElementById('successMsg').innerText = `درخواست تبادل شما برای ${name} ارسال شد. منتظر پاسخ او باشید.`;
+            openModal('successModal');
+        }
+
+        // --- ۶. کنترل منوی موبایل ---
+        document.getElementById('menuBtn').addEventListener('click', function() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>
